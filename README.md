@@ -7,7 +7,7 @@
 ## 專案結構
 
 ```
-monopoly-python/
+monopoly/
 ├── main.py                 # 遊戲進入點
 ├── core/                   # 核心遊戲邏輯（無 UI 依賴）
 │   ├── dice.py             # 骰子
@@ -53,7 +53,7 @@ pip install pygame
 ## 啟動遊戲
 
 ```bash
-cd monopoly-python
+cd monopoly
 python main.py
 ```
 
@@ -143,7 +143,7 @@ python main.py
 ## 執行測試
 
 ```bash
-cd monopoly-python
+cd monopoly
 python test_integration.py
 ```
 
