@@ -29,7 +29,7 @@ from ui.constants import (
     PARCHMENT, PARCHMENT_DARK, SHADOW, TURN_GLOW,
     FONT_SIZE_XL, FONT_SIZE_LG,
 )
-from ui.utils import load_font, in_rect, draw_rect_alpha, draw_text_shadow
+from ui.utils import load_font, in_rect, draw_rect_alpha, draw_rounded_rect_alpha, draw_text_shadow
 from ui.board_renderer import BoardRenderer
 from ui.info_panel import InfoPanel
 from ui.dialog import show_confirm, show_inventory
@@ -76,9 +76,13 @@ def handle_dice_click(screen: pygame.Surface,
       roll → pending（buy/upgrade/shop）→ end_turn → start_round
     回傳 True 代表遊戲結束（有人破產）。
     """
+    before_money = [player.get_money() for player in gs.players]
+
     # 1. 擲骰 + 移動
     ev = gs.roll_dice()
+    renderer.sync_money_state(gs)
     play_roll_sequence(screen, renderer, gs, info_panel, ev.get("movement", {}), draw_action_hud)
+    renderer.queue_money_changes(before_money, gs)
     info_panel.add_messages(ev["messages"])
     _refresh(screen, renderer, gs, info_panel)
     draw_modal_background = lambda: (
@@ -149,8 +153,7 @@ def handle_dice_click(screen: pygame.Surface,
     info_panel.add_messages(ev_end["messages"])
 
     # 5. 開始下一回合
-    ev_start = gs.start_round()
-    info_panel.add_messages(ev_start["messages"])
+    start_next_playable_turn(screen, renderer, gs, info_panel)
 
     # 若下一位玩家有 skip（留在醫院/監獄）→ 仍等待玩家點擊骰子
 
@@ -168,6 +171,58 @@ def _refresh(screen: pygame.Surface,
     info_panel.draw()
     draw_action_hud(screen, gs, pygame.mouse.get_pos())
     pygame.display.flip()
+
+
+def start_next_playable_turn(screen: pygame.Surface,
+                             renderer: BoardRenderer,
+                             gs: GameState,
+                             info_panel: InfoPanel) -> None:
+    """Start turns and auto-advance over players who must skip."""
+    guard = 0
+    while guard < 32:
+        ev_start = gs.start_round()
+        info_panel.add_messages(ev_start["messages"])
+        _refresh(screen, renderer, gs, info_panel)
+        if ev_start.get("pending") != "skip":
+            return
+        show_skip_notice(screen, renderer, gs, info_panel, ev_start["messages"][-1])
+        ev_end = gs.end_turn()
+        info_panel.add_messages(ev_end["messages"])
+        _refresh(screen, renderer, gs, info_panel)
+        guard += 1
+
+
+def show_skip_notice(screen: pygame.Surface,
+                     renderer: BoardRenderer,
+                     gs: GameState,
+                     info_panel: InfoPanel,
+                     message: str,
+                     duration_ms: int = 900) -> None:
+    font_lg = load_font(FONT_SIZE_LG)
+    font_md = load_font(FONT_SIZE_MD)
+    clock = pygame.time.Clock()
+    start = pygame.time.get_ticks()
+    box = (SCREEN_W // 2 - 260, 86, 520, 92)
+
+    while pygame.time.get_ticks() - start < duration_ms:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+
+        renderer.draw(gs)
+        info_panel.draw()
+        draw_action_hud(screen, gs, pygame.mouse.get_pos())
+        draw_rect_alpha(screen, (20, 14, 6), (0, 0, SCREEN_W, SCREEN_H), 42)
+        draw_rounded_rect_alpha(screen, (52, 38, 20), box, 238, border_radius=14)
+        pygame.draw.rect(screen, TURN_GLOW, box, 3, border_radius=14)
+        title = "跳過回合"
+        title_surf = font_lg.render(title, True, TURN_GLOW)
+        msg_surf = font_md.render(message, True, PARCHMENT)
+        screen.blit(title_surf, (box[0] + (box[2] - title_surf.get_width()) // 2, box[1] + 16))
+        screen.blit(msg_surf, (box[0] + (box[2] - msg_surf.get_width()) // 2, box[1] + 50))
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 def draw_action_hud(screen: pygame.Surface, gs: GameState, mouse_pos: tuple[int, int]) -> None:
@@ -228,8 +283,7 @@ def main() -> None:
     game_over   = False
 
     # 第一回合開始
-    ev_start = gs.start_round()
-    info_panel.add_messages(ev_start["messages"])
+    start_next_playable_turn(screen, renderer, gs, info_panel)
 
     # ── 主迴圈 ──
     running = True
@@ -237,6 +291,7 @@ def main() -> None:
         mx, my = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
+            info_panel.handle_event(event)
             if event.type == pygame.QUIT:
                 running = False
 

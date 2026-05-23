@@ -111,6 +111,7 @@ class GameState:
         # 待確認狀態
         self._pending: Optional[str] = None
         self._pending_land_idx: Optional[int] = None
+        self._shop_purchase_done: bool = False
 
     def _bankruptcy_event(self, updated_players: Optional[List[int]] = None) -> dict:
         updated = list(updated_players or [])
@@ -178,6 +179,10 @@ class GameState:
             player.stop_round -= 1
             messages.append(f"{name} 在監獄服刑，跳過本回合（剩餘 {player.stop_round} 輪）")
             skip = True
+        elif player.stop_round > 0:
+            player.stop_round -= 1
+            messages.append(f"{name} 暫停行動，跳過本回合（剩餘 {player.stop_round} 輪）")
+            skip = True
 
         return _make_event(
             messages=messages,
@@ -234,6 +239,7 @@ class GameState:
 
             elif mode == 3:   # 商店
                 pending = "shop"
+                self._shop_purchase_done = False
 
             # mode == -1：無功能，不做任何事
 
@@ -361,8 +367,20 @@ class GameState:
         """在商店視窗中購買一件道具。可多次呼叫。"""
         p = self.current_player_idx
         player = self.players[p]
+        if self._pending != "shop":
+            return _make_event(
+                messages=["目前不在商店，無法購買道具。"],
+                updated_players=[],
+            )
+        if self._shop_purchase_done:
+            return _make_event(
+                messages=["本次進店已購買 1 件道具。"],
+                updated_players=[],
+            )
         result = self._shop.buy(item_idx, player)
-        bankruptcy = self._bankruptcy_event([p])
+        if result["success"]:
+            self._shop_purchase_done = True
+        bankruptcy = self._bankruptcy_event([p] if result["success"] else [])
         messages = [result["message"]]
         if bankruptcy["message"]:
             messages.append(bankruptcy["message"])

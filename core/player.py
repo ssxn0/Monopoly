@@ -57,7 +57,7 @@ class Player:
         if m > 0:
             if self.locate < 48:
                 # 過起點獎勵
-                if self.locate + m > 48:
+                if self.locate + m >= 48:
                     self.money += GO_BONUS
                 self.locate = (self.locate + m) % 48
                 self._check_river()

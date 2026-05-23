@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, ".")
 
 from core.game_state import GameState
-from core.chance_card import _FreeHouse
+from core.chance_card import _FreeHouse, _Rest
 from core.fate_card import _Fog, _RemoveHouse
 from core.player import Player
 import core.chance_card as chance_card
@@ -98,6 +98,12 @@ p.move(-3)
 print(f"move(-3) from 10 -> {p.locate}")
 assert p.locate == 7
 
+p2 = Player(1)
+p2.locate = 47
+p2.move(1)
+assert p2.locate == 0
+assert p2.money == 102000
+
 gs4 = GameState()
 gs4.players[2].get_house().append(1)
 before_price = gs4.lands[1].get_money()
@@ -106,6 +112,20 @@ try:
     chance_card.random.randrange = lambda n: 2
     _FreeHouse().action(gs4.players, gs4.lands, 0)
     assert gs4.lands[1].get_money() > before_price
+finally:
+    chance_card.random.randrange = old_chance_randrange
+
+gs4b = GameState()
+land = gs4b.lands[1]
+land.buy_land(0)
+gs4b.players[0].get_house().append(1)
+while land.get_level() < 4:
+    land.upgrade_land()
+old_chance_randrange = chance_card.random.randrange
+try:
+    chance_card.random.randrange = lambda n: 0
+    _FreeHouse().action(gs4b.players, gs4b.lands, 0)
+    assert land.get_level() == 4
 finally:
     chance_card.random.randrange = old_chance_randrange
 
@@ -147,16 +167,38 @@ assert ev["game_over"] is True
 gs9 = GameState()
 price = gs9.get_shop_display()[0]["price"]
 gs9.players[0].money = price
+gs9._pending = "shop"
 ev = gs9.buy_shop_item(0)
 assert ev["game_over"] is True
 
 gs10 = GameState()
+gs10._pending = "shop"
 ev = gs10.buy_shop_item(-1)
 assert ev["game_over"] is False
 assert gs10.players[0].get_prop() == []
 ev = gs10.buy_shop_item(99)
 assert ev["game_over"] is False
 assert gs10.players[0].get_prop() == []
+
+gs13 = GameState()
+ev = gs13.buy_shop_item(0)
+assert ev["game_over"] is False
+assert gs13.players[0].get_prop() == []
+gs13._pending = "shop"
+ev = gs13.buy_shop_item(0)
+assert ev["game_over"] is False
+assert gs13.players[0].get_prop() == [0]
+money_after_first_buy = gs13.players[0].get_money()
+ev = gs13.buy_shop_item(1)
+assert ev["game_over"] is False
+assert gs13.players[0].get_prop() == [0]
+assert gs13.players[0].get_money() == money_after_first_buy
+
+gs14 = GameState()
+_Rest().action(gs14.players, gs14.lands, 0)
+ev = gs14.start_round()
+assert ev["pending"] == "skip"
+assert gs14.players[0].stop_round == 0
 
 for bad_idx in [-1, 4]:
     try:

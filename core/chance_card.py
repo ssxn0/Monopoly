@@ -13,6 +13,18 @@ class _Card:
         raise NotImplementedError
 
 
+def _upgrade_cheapest_available_house(players, lands, player_idx: int) -> int | None:
+    candidates = [
+        idx for idx in players[player_idx].get_house()
+        if lands[idx].get_level() < 4
+    ]
+    if not candidates:
+        return None
+    cheapest_idx = min(candidates, key=lambda idx: lands[idx].get_money())
+    lands[cheapest_idx].upgrade_land()
+    return cheapest_idx
+
+
 # ── 20 張卡片實作 ─────────────────────────────────────────────────────────────
 
 class _Emp(_Card):
@@ -52,12 +64,8 @@ class _FreeHouse(_Card):
         if not players[c].get_house():
             return {"messages": [msg, "（當前玩家無地產，無法蓋房）"], "updated_players": []}
 
-        # Find the selected player's cheapest land and upgrade it.
-        cheapest_idx = min(
-            players[c].get_house(),
-            key=lambda idx: lands[idx].get_money()
-        )
-        lands[cheapest_idx].upgrade_land()
+        if _upgrade_cheapest_available_house(players, lands, c) is None:
+            return {"messages": [msg, "已經沒有可升級的房子。"], "updated_players": []}
         return {"messages": [msg], "updated_players": [c]}
 
 
@@ -126,11 +134,8 @@ class _FreeHouse1(_Card):
         if not players[p].get_house():
             return {"messages": [msg, "（無地產，無法蓋房）"], "updated_players": []}
 
-        cheapest_idx = min(
-            players[p].get_house(),
-            key=lambda idx: lands[idx].get_money()
-        )
-        lands[cheapest_idx].upgrade_land()
+        if _upgrade_cheapest_available_house(players, lands, p) is None:
+            return {"messages": [msg, "已經沒有可升級的房子。"], "updated_players": []}
         return {"messages": [msg], "updated_players": [p]}
 
 
@@ -142,11 +147,8 @@ class _FreeHouse2(_Card):
         if not players[p].get_house():
             return {"messages": [msg, "（無地產，無法蓋房）"], "updated_players": []}
 
-        cheapest_idx = min(
-            players[p].get_house(),
-            key=lambda idx: lands[idx].get_money()
-        )
-        lands[cheapest_idx].upgrade_land()
+        if _upgrade_cheapest_available_house(players, lands, p) is None:
+            return {"messages": [msg, "已經沒有可升級的房子。"], "updated_players": []}
         return {"messages": [msg], "updated_players": [p]}
 
 
