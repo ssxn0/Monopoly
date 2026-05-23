@@ -114,9 +114,10 @@ def show_inventory(screen: pygame.Surface,
                 for slot, item_idx in enumerate(prop):
                     use_rect = (px_box + pw - 110, py_box + 80 + slot * 52, 80, 32)
                     if in_rect((mx, my), use_rect) and item_idx == 0:
+                        before_points = gs.additional_points
                         ev = gs.use_item(slot)
                         info_panel.add_messages(ev["messages"])
-                        extra_points += gs.additional_points
+                        extra_points += gs.additional_points - before_points
                         break
 
         # 背景遮罩

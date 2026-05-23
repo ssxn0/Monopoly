@@ -97,6 +97,9 @@ def handle_dice_click(screen: pygame.Surface,
                             f"Price: ${info['price']:,}")
         ev2  = gs.confirm_buy_land(yes)
         info_panel.add_messages(ev2["messages"])
+        if ev2["game_over"]:
+            show_game_over(screen, ev2["loser_name"])
+            return True
 
     elif pending == "upgrade":
         info = ev["pending_info"]
@@ -105,9 +108,15 @@ def handle_dice_click(screen: pygame.Surface,
                             f"Price: ${info['price']:,}")
         ev2  = gs.confirm_upgrade_land(yes)
         info_panel.add_messages(ev2["messages"])
+        if ev2["game_over"]:
+            show_game_over(screen, ev2["loser_name"])
+            return True
 
     elif pending == "shop":
-        show_shop(screen, gs, info_panel)
+        ev2 = show_shop(screen, gs, info_panel)
+        if ev2["game_over"]:
+            show_game_over(screen, ev2["loser_name"])
+            return True
 
     elif pending is None:
         # 機會 / 命運卡效果 → 若有複數訊息，彈出卡片視窗

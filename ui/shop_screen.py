@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 def show_shop(screen: pygame.Surface,
               gs: "GameState",
-              info_panel: "InfoPanel") -> None:
+              info_panel: "InfoPanel") -> dict:
     """
     顯示商店視窗，玩家可購買多件道具，點擊「離開商店」關閉。
     """
@@ -49,13 +49,15 @@ def show_shop(screen: pygame.Surface,
                 if in_rect((mx, my), close_rect):
                     ev = gs.close_shop()
                     info_panel.add_messages(ev["messages"])
-                    return
+                    return ev
                 # 各道具購買按鈕
                 for i, item in enumerate(items):
                     buy_rect = (sx + sw - 120, sy + 90 + i * 60, 90, 34)
                     if in_rect((mx, my), buy_rect):
                         ev = gs.buy_shop_item(item["idx"])
                         info_panel.add_messages(ev["messages"])
+                        if ev["game_over"]:
+                            return ev
 
         # 半透明遮罩
         draw_rect_alpha(screen, (0, 0, 0), (0, 0, SCREEN_W, SCREEN_H), 160)

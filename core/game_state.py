@@ -110,6 +110,25 @@ class GameState:
         self._pending: Optional[str] = None
         self._pending_land_idx: Optional[int] = None
 
+    def _bankruptcy_event(self, updated_players: Optional[List[int]] = None) -> dict:
+        updated = list(updated_players or [])
+        for idx, player in enumerate(self.players):
+            if player.is_bankrupt():
+                if idx not in updated:
+                    updated.append(idx)
+                return {
+                    "game_over": True,
+                    "loser_name": PLAYER_NAMES[idx],
+                    "message": f"{PLAYER_NAMES[idx]} is Loser !",
+                    "updated_players": updated,
+                }
+        return {
+            "game_over": False,
+            "loser_name": None,
+            "message": None,
+            "updated_players": updated,
+        }
+
     # ── 棋盤初始化 ────────────────────────────────────────────────────────────
 
     def _init_board(self) -> List[Land]:
@@ -220,13 +239,9 @@ class GameState:
             # 在最終回傳前確保 updated 包含所有受影響玩家
             pass
 
-        # 破產檢查
-        game_over = False
-        loser_name = None
-        if player.is_bankrupt():
-            messages.append(f"{name} is Loser !")
-            game_over = True
-            loser_name = name
+        bankruptcy = self._bankruptcy_event(updated)
+        if bankruptcy["message"]:
+            messages.append(bankruptcy["message"])
 
         self._pending = pending
         self._pending_land_idx = pending_info.get("land_idx")
@@ -235,9 +250,9 @@ class GameState:
             messages=messages,
             pending=pending,
             pending_info=pending_info,
-            game_over=game_over,
-            loser_name=loser_name,
-            updated_players=list(set(updated)),
+            game_over=bankruptcy["game_over"],
+            loser_name=bankruptcy["loser_name"],
+            updated_players=list(set(bankruptcy["updated_players"])),
         )
 
     def confirm_buy_land(self, yes: bool) -> dict:
@@ -248,6 +263,8 @@ class GameState:
         p = self.current_player_idx
         player = self.players[p]
         loc = self._pending_land_idx
+        if self._pending != "buy" or loc is None:
+            return _make_event(messages=["No land purchase is pending."], updated_players=[p])
         land = self.lands[loc]
 
         if yes:
@@ -260,7 +277,16 @@ class GameState:
         self._pending = None
         self._pending_land_idx = None
 
-        return _make_event(messages=[msg], updated_players=[p])
+        bankruptcy = self._bankruptcy_event([p])
+        messages = [msg]
+        if bankruptcy["message"]:
+            messages.append(bankruptcy["message"])
+        return _make_event(
+            messages=messages,
+            game_over=bankruptcy["game_over"],
+            loser_name=bankruptcy["loser_name"],
+            updated_players=bankruptcy["updated_players"],
+        )
 
     def confirm_upgrade_land(self, yes: bool) -> dict:
         """
@@ -270,6 +296,8 @@ class GameState:
         p = self.current_player_idx
         player = self.players[p]
         loc = self._pending_land_idx
+        if self._pending != "upgrade" or loc is None:
+            return _make_event(messages=["No land upgrade is pending."], updated_players=[p])
         land = self.lands[loc]
         messages = []
 
@@ -288,7 +316,15 @@ class GameState:
         self._pending = None
         self._pending_land_idx = None
 
-        return _make_event(messages=messages, updated_players=[p])
+        bankruptcy = self._bankruptcy_event([p])
+        if bankruptcy["message"]:
+            messages.append(bankruptcy["message"])
+        return _make_event(
+            messages=messages,
+            game_over=bankruptcy["game_over"],
+            loser_name=bankruptcy["loser_name"],
+            updated_players=bankruptcy["updated_players"],
+        )
 
     def use_item(self, slot: int) -> dict:
         """
@@ -314,9 +350,15 @@ class GameState:
         p = self.current_player_idx
         player = self.players[p]
         result = self._shop.buy(item_idx, player)
+        bankruptcy = self._bankruptcy_event([p])
+        messages = [result["message"]]
+        if bankruptcy["message"]:
+            messages.append(bankruptcy["message"])
         return _make_event(
-            messages=[result["message"]],
-            updated_players=[p],
+            messages=messages,
+            game_over=bankruptcy["game_over"],
+            loser_name=bankruptcy["loser_name"],
+            updated_players=bankruptcy["updated_players"],
         )
 
     def close_shop(self) -> dict:
@@ -341,10 +383,14 @@ class GameState:
 
     def get_player_info(self, player_idx: int) -> dict:
         """回傳指定玩家的完整資訊字典。"""
+        if player_idx < 0 or player_idx >= len(self.players):
+            raise IndexError(f"Invalid player index: {player_idx}")
         return self.players[player_idx].get_info()
 
     def get_land_info(self, land_idx: int) -> dict:
         """回傳指定地格的資訊字典。"""
+        if land_idx < 0 or land_idx >= BOARD_SIZE:
+            raise IndexError(f"Invalid land index: {land_idx}")
         land = self.lands[land_idx]
         return {
             "idx": land_idx,
@@ -388,7 +434,7 @@ class GameState:
 
         if land.get_ownernum() == 0:
             # 無主地
-            if player.get_money() > land.get_money():
+            if player.get_money() >= land.get_money():
                 pending = "buy"
                 pending_info = {
                     "land_name": land.get_name(),
@@ -409,6 +455,9 @@ class GameState:
                     "price": land.get_build(),
                     "land_idx": loc,
                 }
+
+        elif land.get_ownernum() == p + 1:
+            messages.append("此土地已達最高等級")
 
         else:
             # 他人的地（或自己已滿級）：收租

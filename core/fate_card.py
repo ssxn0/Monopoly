@@ -71,7 +71,7 @@ class _Back(_Card):
     """
 
     def action(self, players, lands, p):
-        players[p].move(-2)
+        players[p].move(-3)
         return {
             "messages": ["前方有水坑，立即後退三格"],
             "updated_players": [p],
@@ -144,7 +144,7 @@ class _RemoveHouse(_Card):
     """
 
     def action(self, players, lands, p):
-        c = int(random.random()) * 3   # Bug 複製：永遠為 0
+        c = random.randrange(len(players))
         messages = [f"政府下令，須拆除玩家{c + 1}的房子"]
 
         if not players[c].get_house():
