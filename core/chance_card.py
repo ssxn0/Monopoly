@@ -178,7 +178,7 @@ class ChanceCard:
     """
     20 張機會卡的牌組，初始化時洗牌，循環抽取。
 
-    卡片分布（對應 Java ChanceCard.java）：
+    卡片分布：
       emp × 4、freeHouse × 2、wolf × 2、rest × 2、
       waterFood × 1、rabbit × 2、soil × 3、
       freeHouse1 × 1、freeHouse2 × 1、drop × 1、drop2 × 1

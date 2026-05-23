@@ -14,7 +14,7 @@ class Player:
 
     def __init__(self, number: int) -> None:
         """
-        number: 玩家編號，1–4（與 Java 版一致）。
+        number: 玩家編號，1–4。
         """
         self.number: int = number
         self.name: str = PLAYER_NAMES[number - 1]
@@ -41,15 +41,14 @@ class Player:
     def get_prop(self) -> List[int]:
         return self.prop
 
-    # ── 移動邏輯（完全對應 Player.java move()） ────────────────────────────
+    # ── 移動邏輯 ────────────────────────────────────────────────────────────
 
     def move(self, m: int) -> int:
         """
         移動玩家 m 步，回傳新位置索引。
 
-        正數 m：前進；負數 m：在 Java 原版中因運算子錯誤
-        (this.locate - m，m 為負數 → 實際 +|m|) 會往前移，
-        Python 版忠實複製此行為。
+        正數 m：前進；負數 m：因原始運算方式
+        (this.locate - m，m 為負數 → 實際 +|m|) 會往前移。
 
         特殊區段：
           48–52 醫院：先扣 stop_round，歸零後才離開醫院。
@@ -86,8 +85,6 @@ class Player:
                         self.locate += m
 
         elif m < 0:
-            # 原版 Java Bug 複製：
-            # Java: this.locate = (this.locate - m)  → m 為負，結果是加法
             # 例：move(-2) 實際讓 locate 增加 2（往前走）
             self.locate = self.locate - m
             if self.locate < 0:

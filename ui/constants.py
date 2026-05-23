@@ -14,10 +14,10 @@ PLAYER_PATHS = [
     "assets/Player4.png",
 ]
 
-# ── 玩家精靈基底位置（JavaFX: layoutX=93, layoutY=465）──
+# ── 玩家精靈基底位置 ──
 PLAYER_BASE = (93, 465)
 
-# ── 棋盤格位置偏移表（Player.java loc[][] 陣列，完整 57 項）──
+# ── 棋盤格位置偏移表（完整 57 項）──
 # 索引 0-47：棋盤主格；48-52：醫院；53-56：監獄
 BOARD_LOC = [
     [  0,   0], [ 60,   0], [121,   0], [182,   0], [242,   0],  #  0-4
@@ -36,11 +36,11 @@ BOARD_LOC = [
     [666,   0], [728,   0], [790,   0], [852,   0],
 ]
 
-# ── 可點擊區域（JavaFX Rectangle，x, y, w, h）──
+# ── 可點擊區域（x, y, w, h）──
 DICE_RECT = (1085, 605, 170, 190)   # 骰子按鈕區域
 ITEM_RECT = (1260, 605, 170, 190)   # 道具欄按鈕區域
 
-# ── 玩家資訊顯示位置（JavaFX VBox padding top=680, left=X）──
+# ── 玩家資訊顯示位置 ──
 PLAYER_STAT_POS = [
     ( 60, 680),  # 布魯
     (330, 680),  # 瑞德
@@ -49,12 +49,12 @@ PLAYER_STAT_POS = [
 ]
 PLAYER_STAT_SPACING = 22   # 每行間距（VBox spacing=14，含字高）
 
-# ── 訊息欄（JavaFX Information.java：x=1100, y=100+i*20, 最多25行）──
+# ── 訊息欄 ──
 INFO_X      = 1100
 INFO_Y      = 100
 INFO_LINE_H = 20
 INFO_MAX    = 25
-INFO_WRAP   = 20   # 超過此字元數自動換行（對應 Java length=20）
+INFO_WRAP   = 20   # 超過此字元數自動換行
 
 # ── 顏色 ──
 WHITE      = (255, 255, 255)

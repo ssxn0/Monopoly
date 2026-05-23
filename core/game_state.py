@@ -16,7 +16,7 @@ PLAYER_NAMES = ["布魯", "瑞德", "椰柔", "古林"]
 BOARD_SIZE = 48
 _BOARD_JSON = Path(__file__).parent.parent / "data" / "board.json"
 
-# ── 硬編碼備援資料（與 Java Main.java 完全一致） ─────────────────────────────
+# ── 硬編碼備援資料 ──────────────────────────────────────────────────────────
 
 _FALLBACK_PRICES = [
     0, 5000, 5000, 5000, 0, 0, 6000, 6000, 6000, 6500, 6500, 6500,
@@ -41,7 +41,7 @@ _FALLBACK_MODES = [
     0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0,
     1, -1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0,
 ]
-# 共用同一 Land 物件的索引對（Java 原版 land[14]=land[13], land[28]=land[27]）
+# 共用同一 Land 物件的索引對
 _SHARED_LANDS = {14: 13, 28: 27}
 
 
@@ -283,7 +283,7 @@ class GameState:
             player.upgrade_land(land.get_build(), has_vip=has_vip)
             land.upgrade_land()
             messages.append("已完成升級...")
-        # 原版 Java 升級失敗時沒有輸出訊息，保持一致
+        # 升級失敗時不輸出訊息，保持既有行為
 
         self._pending = None
         self._pending_land_idx = None
@@ -327,7 +327,7 @@ class GameState:
     def end_turn(self) -> dict:
         """
         結束當前回合：重置額外步數，推進到下一位玩家。
-        回傳訊息為分隔線（對應 Java 的 "---…---"）。
+        回傳訊息為分隔線。
         """
         self.additional_points = 0
         self.round += 1
@@ -373,7 +373,7 @@ class GameState:
 
     def _normal_action(self, p: int, loc: int) -> dict:
         """
-        普通格三路判斷（對應 Java Main.NormalAction）：
+        普通格三路判斷：
           1. 無主 → 詢問是否購買
           2. 自己的地 且 level < 4 → 詢問是否升級
           3. 他人的地 → 自動扣租金

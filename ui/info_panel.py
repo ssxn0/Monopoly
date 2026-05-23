@@ -22,9 +22,7 @@ class InfoPanel:
     def add_message(self, text: str) -> None:
         """
         新增一條訊息。
-        對應 Java Information.setText()：
-          - 分隔線直接整行加入
-          - 超過 INFO_WRAP 字元則切成兩行
+        分隔線直接整行加入，超過 INFO_WRAP 字元則切成兩行。
         """
         if text == SEPARATOR or len(text) <= INFO_WRAP:
             self._push(text)

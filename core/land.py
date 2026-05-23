@@ -13,7 +13,7 @@ class Land:
         self.ownernum: int = 0         # 擁有者編號（1–4，0 代表無主）
         self.level: int = 1            # 房屋等級（1 = 空地，最高 4）
 
-    # ── Getters（保持與 Java 相同的語意） ──────────────────────────────────
+    # ── Getters ────────────────────────────────────────────────────────────
 
     def get_name(self) -> str:
         return self.name

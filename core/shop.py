@@ -73,7 +73,7 @@ class Shop:
                     props.append(Prop(item["idx"], item["name"], item["price"], item["info"]))
             return props
         except (FileNotFoundError, KeyError, json.JSONDecodeError):
-            # Fallback：與 Java Shop.java 完全一致的硬編碼資料
+            # Fallback：硬編碼資料
             return [
                 _Dice(0, "骰子",     1300, "骰子\n\n選取道具後可多擲一顆骰子"),
                 Prop(1, "健保卡",    1500, "健保卡\n\n醫藥費補助1800元"),

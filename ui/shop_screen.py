@@ -19,7 +19,6 @@ def show_shop(screen: pygame.Surface,
               info_panel: "InfoPanel") -> None:
     """
     顯示商店視窗，玩家可購買多件道具，點擊「離開商店」關閉。
-    對應 Java Shop.openWindow()。
     """
     font_t  = load_font(FONT_SIZE_XL)
     font_n  = load_font(FONT_SIZE_LG)

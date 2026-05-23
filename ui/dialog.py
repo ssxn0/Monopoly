@@ -19,8 +19,6 @@ def show_confirm(screen: pygame.Surface,
                  header: str, content: str) -> bool:
     """
     顯示「是 / 否」確認對話框，阻塞直到玩家選擇。
-    對應 Java NewStage.Action() / Action2()。
-
     回傳 True（是）或 False（否）。
     """
     font_h  = load_font(FONT_SIZE_LG)
@@ -73,7 +71,7 @@ def show_confirm(screen: pygame.Surface,
         clock.tick(60)
 
 
-# ── 道具欄視窗（對應 Java Main.PlaywithProp()）──
+# ── 道具欄視窗 ──
 
 def show_inventory(screen: pygame.Surface,
                    gs: "GameState",

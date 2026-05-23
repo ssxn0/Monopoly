@@ -7,7 +7,6 @@ class Dice:
     def rotate(self) -> int:
         """擲骰子，回傳 2 到 12 的隨機整數。
 
-        原版 Java 使用預先建立的陣列再 shuffle，
-        Python 版直接用 random.randint 達到同等效果。
+        直接用 random.randint 產生兩顆骰子的合計點數。
         """
         return random.randint(1, 6) + random.randint(1, 6)

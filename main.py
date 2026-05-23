@@ -66,7 +66,7 @@ def show_game_over(screen: pygame.Surface, loser_name: str) -> None:
         clock.tick(FPS)
 
 
-# ── 骰子點擊處理（對應 Java rotate.setOnMouseClicked）──
+# ── 骰子點擊處理 ──
 
 def handle_dice_click(screen: pygame.Surface,
                       gs: GameState,
@@ -127,7 +127,7 @@ def handle_dice_click(screen: pygame.Surface,
     ev_start = gs.start_round()
     info_panel.add_messages(ev_start["messages"])
 
-    # 若下一位玩家有 skip（留在醫院/監獄）→ 仍等待玩家點擊骰子（同 Java 行為）
+    # 若下一位玩家有 skip（留在醫院/監獄）→ 仍等待玩家點擊骰子
 
     _refresh(screen, renderer, gs, info_panel)
     return False
@@ -153,7 +153,7 @@ def main() -> None:
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
     pygame.display.set_caption(WINDOW_TITLE)
 
-    # 背景音樂（對應 Java MediaPlayer.setCycleCount(INDEFINITE)）
+    # 背景音樂
     try:
         pygame.mixer.music.load(MUSIC_PATH)
         pygame.mixer.music.play(-1)

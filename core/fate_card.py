@@ -229,7 +229,7 @@ class FateCard:
     """
     19 張命運卡的牌組，初始化時洗牌，循環抽取。
 
-    卡片分布（對應 Java FateCard.java）：
+    卡片分布：
       fog×1、hurricane×1、fire1×1、fire2×1、back×2、
       forward×1、forward2×1、jail×2、release×2、
       removeHouse×2、hospital（熊）×1、hospital（蛇）×1、
@@ -261,7 +261,6 @@ class FateCard:
     def operate(self, players: List["Player"], lands: List["Land"], p: int) -> dict:
         """抽一張卡並執行效果，回傳事件字典。"""
         result = self._deck[self._index].action(players, lands, p)
-        # 原版 Java：index != 19 則 index++，否則 index=0
         # 因牌組長度為 19（index 0–18），修正後使用 modulo
         self._index = (self._index + 1) % len(self._deck)
         return result
