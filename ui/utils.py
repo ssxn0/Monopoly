@@ -48,6 +48,56 @@ def draw_rounded_rect_alpha(surface: pygame.Surface, color: tuple,
     surface.blit(panel, (rect[0], rect[1]))
 
 
+def draw_text_shadow(surface: pygame.Surface, font: pygame.font.Font,
+                     text: str, pos: tuple[int, int], color: tuple,
+                     shadow_color: tuple = (20, 12, 6),
+                     offset: tuple[int, int] = (2, 2)) -> pygame.Rect:
+    """Draw readable text on the illustrated map texture."""
+    sx, sy = pos[0] + offset[0], pos[1] + offset[1]
+    shadow = font.render(text, True, shadow_color)
+    surface.blit(shadow, (sx, sy))
+    label = font.render(text, True, color)
+    surface.blit(label, pos)
+    return label.get_rect(topleft=pos)
+
+
+def fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    """Trim text to fit a fixed-width illustrated UI slot."""
+    if font.size(text)[0] <= max_width:
+        return text
+
+    ellipsis = "..."
+    limit = max_width - font.size(ellipsis)[0]
+    if limit <= 0:
+        return ellipsis
+
+    fitted = ""
+    for ch in text:
+        if font.size(fitted + ch)[0] > limit:
+            break
+        fitted += ch
+    return fitted + ellipsis
+
+
+def wrap_text(font: pygame.font.Font, text: str, max_width: int) -> list[str]:
+    """Wrap Chinese/English UI text by rendered pixel width."""
+    if not text:
+        return [""]
+
+    lines: list[str] = []
+    current = ""
+    for ch in text:
+        candidate = current + ch
+        if current and font.size(candidate)[0] > max_width:
+            lines.append(current)
+            current = ch
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines
+
+
 def draw_button(surface: pygame.Surface, font: pygame.font.Font,
                 text: str, rect: tuple, color: tuple,
                 text_color: tuple = (255, 255, 255)) -> pygame.Rect:

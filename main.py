@@ -24,19 +24,18 @@ import pygame
 from core.game_state import GameState
 from ui.constants import (
     SCREEN_W, SCREEN_H, FPS, WINDOW_TITLE,
-    MUSIC_PATH, DICE_RECT, ITEM_RECT,
-    WHITE, BLACK, DARK_GRAY, GRAY, PLAYER_COLORS,
+    MUSIC_PATH, DICE_RECT, ITEM_RECT, DICE_FRAME_RECT, ITEM_FRAME_RECT,
+    GRAY,
+    PARCHMENT, PARCHMENT_DARK, SHADOW, TURN_GLOW,
     FONT_SIZE_XL, FONT_SIZE_LG,
 )
-from ui.utils import load_font, draw_button, in_rect, draw_rect_alpha
+from ui.utils import load_font, in_rect, draw_rect_alpha, draw_text_shadow
 from ui.board_renderer import BoardRenderer
 from ui.info_panel import InfoPanel
 from ui.dialog import show_confirm, show_inventory
 from ui.shop_screen import show_shop
 from ui.card_popup import show_card
-
-PLAYER_NAMES = ["布魯", "瑞德", "椰柔", "古林"]
-
+from ui.animations import play_roll_sequence
 
 # ── 遊戲結束畫面 ──
 
@@ -79,11 +78,13 @@ def handle_dice_click(screen: pygame.Surface,
     """
     # 1. 擲骰 + 移動
     ev = gs.roll_dice()
+    play_roll_sequence(screen, renderer, gs, info_panel, ev.get("movement", {}), draw_action_hud)
     info_panel.add_messages(ev["messages"])
     _refresh(screen, renderer, gs, info_panel)
     draw_modal_background = lambda: (
         renderer.draw(gs),
         info_panel.draw(),
+        draw_action_hud(screen, gs, pygame.mouse.get_pos()),
     )
 
     # 2. 破產檢查
@@ -132,7 +133,16 @@ def handle_dice_click(screen: pygame.Surface,
             ctype = "fate" if any(
                 k in msgs[0] for k in ["天災", "龍捲", "霧", "火", "監獄", "醫院"]
             ) else "chance"
-            show_card(screen, msgs[1:], card_type=ctype)
+            show_card(
+                screen,
+                msgs[1:],
+                card_type=ctype,
+                draw_background=lambda: (
+                    renderer.draw(gs),
+                    info_panel.draw(),
+                    draw_action_hud(screen, gs, pygame.mouse.get_pos()),
+                ),
+            )
 
     # 4. 結束回合
     ev_end = gs.end_turn()
@@ -156,7 +166,42 @@ def _refresh(screen: pygame.Surface,
              info_panel: InfoPanel) -> None:
     renderer.draw(gs)
     info_panel.draw()
+    draw_action_hud(screen, gs, pygame.mouse.get_pos())
     pygame.display.flip()
+
+
+def draw_action_hud(screen: pygame.Surface, gs: GameState, mouse_pos: tuple[int, int]) -> None:
+    if not hasattr(draw_action_hud, "_fonts"):
+        draw_action_hud._fonts = (  # type: ignore[attr-defined]
+            load_font(FONT_SIZE_LG),
+        )
+    (font_lg,) = draw_action_hud._fonts  # type: ignore[attr-defined]
+
+    for rect, frame_rect, label in [
+        (DICE_RECT, DICE_FRAME_RECT, "擲骰"),
+        (ITEM_RECT, ITEM_FRAME_RECT, "背包"),
+    ]:
+        hover = in_rect(mouse_pos, rect)
+        frame = pygame.Rect(frame_rect)
+        pygame.draw.rect(
+            screen,
+            TURN_GLOW if hover else PARCHMENT_DARK,
+            frame,
+            3 if hover else 2,
+            border_radius=16,
+        )
+        text = font_lg.render(label, True, PARCHMENT)
+        tx = rect[0] + (rect[2] - text.get_width()) // 2
+        ty = rect[1] + rect[3] - 32
+        draw_text_shadow(
+            screen,
+            font_lg,
+            label,
+            (tx, ty),
+            TURN_GLOW if hover else PARCHMENT,
+            SHADOW,
+            (2, 2),
+        )
 
 
 # ── 主程式 ──
@@ -179,7 +224,6 @@ def main() -> None:
     gs          = GameState()
     renderer    = BoardRenderer(screen)
     info_panel  = InfoPanel(screen)
-    font_hint   = load_font(FONT_SIZE_LG)
     clock       = pygame.time.Clock()
     game_over   = False
 
@@ -209,7 +253,11 @@ def main() -> None:
                         screen,
                         gs,
                         info_panel,
-                        draw_background=lambda: (renderer.draw(gs), info_panel.draw()),
+                        draw_background=lambda: (
+                            renderer.draw(gs),
+                            info_panel.draw(),
+                            draw_action_hud(screen, gs, pygame.mouse.get_pos()),
+                        ),
                     )
                     # additional_points 已在 gs.use_item() 內累積，extra 僅供顯示
 
@@ -217,15 +265,8 @@ def main() -> None:
         renderer.draw(gs)
         info_panel.draw()
 
-        # 提示文字：顯示當前玩家名稱與操作提示
         if not game_over:
-            p = gs.current_player_idx
-            hint_text = (
-                f"{PLAYER_NAMES[p]} 的回合　"
-                f"[左側: 骰子]  [右側: 道具欄]"
-            )
-            hint_surf = font_hint.render(hint_text, True, PLAYER_COLORS[p])
-            screen.blit(hint_surf, (SCREEN_W // 2 - hint_surf.get_width() // 2, 6))
+            draw_action_hud(screen, gs, (mx, my))
 
         pygame.display.flip()
         clock.tick(FPS)

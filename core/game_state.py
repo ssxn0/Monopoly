@@ -54,6 +54,7 @@ def _make_event(
     game_over: bool = False,
     loser_name: Optional[str] = None,
     updated_players: Optional[List[int]] = None,
+    movement: Optional[dict] = None,
 ) -> dict:
     return {
         "messages": messages or [],
@@ -62,6 +63,7 @@ def _make_event(
         "game_over": game_over,
         "loser_name": loser_name,
         "updated_players": list(set(updated_players or [])),
+        "movement": movement or {},
     }
 
 
@@ -198,6 +200,7 @@ class GameState:
         player = self.players[p]
         name = PLAYER_NAMES[p]
 
+        start_loc = player.locate
         # 擲骰
         points = self._dice.rotate() + self.additional_points
         loc = player.move(points)
@@ -243,6 +246,14 @@ class GameState:
         if bankruptcy["message"]:
             messages.append(bankruptcy["message"])
 
+        movement = {
+            "player": p,
+            "from": start_loc,
+            "points": points,
+            "dice_to": loc,
+            "final_to": player.locate,
+        }
+
         self._pending = pending
         self._pending_land_idx = pending_info.get("land_idx")
 
@@ -253,6 +264,7 @@ class GameState:
             game_over=bankruptcy["game_over"],
             loser_name=bankruptcy["loser_name"],
             updated_players=list(set(bankruptcy["updated_players"])),
+            movement=movement,
         )
 
     def confirm_buy_land(self, yes: bool) -> dict:
