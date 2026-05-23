@@ -3,11 +3,12 @@ import pygame
 from typing import TYPE_CHECKING
 
 from ui.constants import (
-    SCREEN_W, SCREEN_H, WHITE, DARK_GRAY, GRAY, LIGHT_GRAY,
+    SCREEN_W, SCREEN_H, WHITE,
     BTN_NORMAL, BTN_YES, PLAYER_COLORS,
+    PARCHMENT, PARCHMENT_DARK, TURN_GLOW,
     FONT_SIZE_XL, FONT_SIZE_LG, FONT_SIZE_MD, FONT_SIZE_NORMAL,
 )
-from ui.utils import load_font, draw_rect_alpha, draw_button, in_rect
+from ui.utils import load_font, draw_rect_alpha, draw_rounded_rect_alpha, draw_button, in_rect
 
 if TYPE_CHECKING:
     from core.game_state import GameState
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
 
 def show_shop(screen: pygame.Surface,
               gs: "GameState",
-              info_panel: "InfoPanel") -> dict:
+              info_panel: "InfoPanel",
+              draw_background=None) -> dict:
     """
     顯示商店視窗，玩家可購買多件道具，點擊「離開商店」關閉。
     """
@@ -60,18 +62,22 @@ def show_shop(screen: pygame.Surface,
                             return ev
 
         # 半透明遮罩
-        draw_rect_alpha(screen, (0, 0, 0), (0, 0, SCREEN_W, SCREEN_H), 160)
+        if draw_background is not None:
+            draw_background()
+        draw_rect_alpha(screen, (20, 14, 6), (0, 0, SCREEN_W, SCREEN_H), 90)
 
         # 視窗背景
-        pygame.draw.rect(screen, DARK_GRAY, (sx, sy, sw, sh), border_radius=12)
-        pygame.draw.rect(screen, GRAY,      (sx, sy, sw, sh), 2, border_radius=12)
+        draw_rounded_rect_alpha(screen, PARCHMENT, (sx + 8, sy + 10, sw, sh), 70, border_radius=16)
+        draw_rounded_rect_alpha(screen, (52, 38, 20), (sx, sy, sw, sh), 232, border_radius=16)
+        pygame.draw.rect(screen, PLAYER_COLORS[p], (sx, sy, sw, sh), 3, border_radius=16)
+        pygame.draw.rect(screen, TURN_GLOW, (sx + 10, sy + 10, sw - 20, sh - 20), 1, border_radius=12)
 
         # 標題
         title = font_t.render("商店", True, PLAYER_COLORS[p])
         screen.blit(title, (sx + (sw - title.get_width()) // 2, sy + 18))
 
         # 玩家金錢
-        money_surf = font_sm.render(f"現有金錢：${player.get_money():,}", True, LIGHT_GRAY)
+        money_surf = font_sm.render(f"現有金錢：${player.get_money():,}", True, PARCHMENT)
         screen.blit(money_surf, (sx + 20, sy + 55))
 
         # 道具列表
@@ -79,7 +85,7 @@ def show_shop(screen: pygame.Surface,
             row_y = sy + 90 + i * 60
 
             # 分隔線
-            pygame.draw.line(screen, GRAY, (sx + 10, row_y - 4), (sx + sw - 10, row_y - 4))
+            pygame.draw.line(screen, PARCHMENT_DARK, (sx + 10, row_y - 4), (sx + sw - 10, row_y - 4))
 
             # 名稱 + 價格
             name_surf = font_sm.render(
@@ -88,7 +94,7 @@ def show_shop(screen: pygame.Surface,
 
             # 說明（取第一行）
             desc = item["info"].split("\n")[-1]
-            desc_surf = font_xs.render(desc, True, LIGHT_GRAY)
+            desc_surf = font_xs.render(desc, True, PARCHMENT)
             screen.blit(desc_surf, (sx + 18, row_y + 26))
 
             # 購買按鈕

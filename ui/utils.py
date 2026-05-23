@@ -34,6 +34,20 @@ def draw_rect_alpha(surface: pygame.Surface, color: tuple,
     surface.blit(overlay, (rect[0], rect[1]))
 
 
+def draw_rounded_rect_alpha(surface: pygame.Surface, color: tuple,
+                            rect: tuple, alpha: int = 220,
+                            border_radius: int = 10) -> None:
+    """Draw a translucent rounded panel while preserving the map underneath."""
+    panel = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
+    pygame.draw.rect(
+        panel,
+        (*color, alpha),
+        panel.get_rect(),
+        border_radius=border_radius,
+    )
+    surface.blit(panel, (rect[0], rect[1]))
+
+
 def draw_button(surface: pygame.Surface, font: pygame.font.Font,
                 text: str, rect: tuple, color: tuple,
                 text_color: tuple = (255, 255, 255)) -> pygame.Rect:

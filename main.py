@@ -81,6 +81,10 @@ def handle_dice_click(screen: pygame.Surface,
     ev = gs.roll_dice()
     info_panel.add_messages(ev["messages"])
     _refresh(screen, renderer, gs, info_panel)
+    draw_modal_background = lambda: (
+        renderer.draw(gs),
+        info_panel.draw(),
+    )
 
     # 2. 破產檢查
     if ev["game_over"]:
@@ -94,7 +98,8 @@ def handle_dice_click(screen: pygame.Surface,
         info = ev["pending_info"]
         yes  = show_confirm(screen,
                             f"是否購買{info['land_name']}？",
-                            f"Price: ${info['price']:,}")
+                            f"Price: ${info['price']:,}",
+                            draw_background=draw_modal_background)
         ev2  = gs.confirm_buy_land(yes)
         info_panel.add_messages(ev2["messages"])
         if ev2["game_over"]:
@@ -105,7 +110,8 @@ def handle_dice_click(screen: pygame.Surface,
         info = ev["pending_info"]
         yes  = show_confirm(screen,
                             f"是否升級{info['land_name']}？",
-                            f"Price: ${info['price']:,}")
+                            f"Price: ${info['price']:,}",
+                            draw_background=draw_modal_background)
         ev2  = gs.confirm_upgrade_land(yes)
         info_panel.add_messages(ev2["messages"])
         if ev2["game_over"]:
@@ -113,7 +119,7 @@ def handle_dice_click(screen: pygame.Surface,
             return True
 
     elif pending == "shop":
-        ev2 = show_shop(screen, gs, info_panel)
+        ev2 = show_shop(screen, gs, info_panel, draw_background=draw_modal_background)
         if ev2["game_over"]:
             show_game_over(screen, ev2["loser_name"])
             return True
@@ -199,7 +205,12 @@ def main() -> None:
 
                 # 道具欄按鈕
                 elif in_rect((mx, my), ITEM_RECT):
-                    extra = show_inventory(screen, gs, info_panel)
+                    extra = show_inventory(
+                        screen,
+                        gs,
+                        info_panel,
+                        draw_background=lambda: (renderer.draw(gs), info_panel.draw()),
+                    )
                     # additional_points 已在 gs.use_item() 內累積，extra 僅供顯示
 
         # ── 每幀繪製 ───

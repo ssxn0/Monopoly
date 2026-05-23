@@ -3,11 +3,12 @@ import pygame
 from typing import TYPE_CHECKING
 
 from ui.constants import (
-    SCREEN_W, SCREEN_H, WHITE, BLACK, DARK_GRAY, GRAY, LIGHT_GRAY,
+    SCREEN_W, SCREEN_H, WHITE, GRAY,
     BTN_YES, BTN_NO, BTN_NORMAL, PLAYER_COLORS,
+    PARCHMENT, PARCHMENT_DARK, TURN_GLOW,
     FONT_SIZE_LG, FONT_SIZE_MD, FONT_SIZE_NORMAL,
 )
-from ui.utils import load_font, draw_rect_alpha, draw_button, in_rect
+from ui.utils import load_font, draw_rect_alpha, draw_rounded_rect_alpha, draw_button, in_rect
 
 if TYPE_CHECKING:
     from core.game_state import GameState
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
 # ── 確認對話框（購買 / 升級）──
 
 def show_confirm(screen: pygame.Surface,
-                 header: str, content: str) -> bool:
+                 header: str, content: str,
+                 draw_background=None) -> bool:
     """
     顯示「是 / 否」確認對話框，阻塞直到玩家選擇。
     回傳 True（是）或 False（否）。
@@ -47,18 +49,22 @@ def show_confirm(screen: pygame.Surface,
                     return False
 
         # 半透明遮罩
-        draw_rect_alpha(screen, (0, 0, 0), (0, 0, SCREEN_W, SCREEN_H), 160)
+        if draw_background is not None:
+            draw_background()
+        draw_rect_alpha(screen, (20, 14, 6), (0, 0, SCREEN_W, SCREEN_H), 90)
 
         # 對話框背景
-        pygame.draw.rect(screen, DARK_GRAY, (dx, dy, dw, dh), border_radius=10)
-        pygame.draw.rect(screen, GRAY,      (dx, dy, dw, dh), 2, border_radius=10)
+        draw_rounded_rect_alpha(screen, PARCHMENT, (dx + 8, dy + 10, dw, dh), 70, border_radius=14)
+        draw_rounded_rect_alpha(screen, (52, 38, 20), (dx, dy, dw, dh), 232, border_radius=14)
+        pygame.draw.rect(screen, PARCHMENT_DARK, (dx, dy, dw, dh), 3, border_radius=14)
+        pygame.draw.rect(screen, TURN_GLOW, (dx + 10, dy + 10, dw - 20, dh - 20), 1, border_radius=10)
 
         # 標題
-        h_surf = font_h.render(header, True, WHITE)
+        h_surf = font_h.render(header, True, TURN_GLOW)
         screen.blit(h_surf, (dx + (dw - h_surf.get_width()) // 2, dy + 30))
 
         # 內文
-        c_surf = font_c.render(content, True, LIGHT_GRAY)
+        c_surf = font_c.render(content, True, PARCHMENT)
         screen.blit(c_surf, (dx + (dw - c_surf.get_width()) // 2, dy + 80))
 
         # 按鈕
@@ -75,7 +81,8 @@ def show_confirm(screen: pygame.Surface,
 
 def show_inventory(screen: pygame.Surface,
                    gs: "GameState",
-                   info_panel: "InfoPanel") -> int:
+                   info_panel: "InfoPanel",
+                   draw_background=None) -> int:
     """
     顯示當前玩家的道具欄視窗，阻塞直到玩家關閉。
     若玩家使用了骰子道具，回傳額外步數（>0）；否則回傳 0。
@@ -121,11 +128,15 @@ def show_inventory(screen: pygame.Surface,
                         break
 
         # 背景遮罩
-        draw_rect_alpha(screen, (0, 0, 0), (0, 0, SCREEN_W, SCREEN_H), 160)
+        if draw_background is not None:
+            draw_background()
+        draw_rect_alpha(screen, (20, 14, 6), (0, 0, SCREEN_W, SCREEN_H), 90)
 
         # 視窗
-        pygame.draw.rect(screen, DARK_GRAY, (px_box, py_box, pw, ph), border_radius=10)
-        pygame.draw.rect(screen, GRAY,      (px_box, py_box, pw, ph), 2, border_radius=10)
+        draw_rounded_rect_alpha(screen, PARCHMENT, (px_box + 8, py_box + 10, pw, ph), 70, border_radius=14)
+        draw_rounded_rect_alpha(screen, (52, 38, 20), (px_box, py_box, pw, ph), 232, border_radius=14)
+        pygame.draw.rect(screen, PLAYER_COLORS[p], (px_box, py_box, pw, ph), 3, border_radius=14)
+        pygame.draw.rect(screen, TURN_GLOW, (px_box + 10, py_box + 10, pw - 20, ph - 20), 1, border_radius=10)
 
         # 標題
         title = font_t.render(f"{name} 的道具欄", True, PLAYER_COLORS[p])
@@ -145,7 +156,7 @@ def show_inventory(screen: pygame.Surface,
 
                 # 說明（第一行）
                 info_line = item.get_information().split("\n")[0]
-                info_surf = font_sm.render(info_line, True, LIGHT_GRAY)
+                info_surf = font_sm.render(info_line, True, PARCHMENT)
                 screen.blit(info_surf, (px_box + 20, row_y + 28))
 
                 # 使用按鈕（只有骰子可主動使用）
