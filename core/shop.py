@@ -90,6 +90,8 @@ class Shop:
 
     def get_prop(self, idx: int) -> Prop:
         """以道具編號取得道具物件。"""
+        if idx < 0 or idx >= len(self._props):
+            raise IndexError(f"Invalid shop item index: {idx}")
         return self._props[idx]
 
     def buy(self, item_idx: int, player: "Player") -> dict:
@@ -97,6 +99,8 @@ class Shop:
         購買指定道具。
         回傳 {"success": bool, "message": str}
         """
+        if item_idx < 0 or item_idx >= len(self._props):
+            return {"success": False, "message": "Invalid shop item."}
         prop = self._props[item_idx]
         if player.get_money() >= prop.get_price():
             player.lose_money(prop.get_price())
@@ -117,6 +121,8 @@ class Shop:
             return {"extra_points": 0, "message": "無效的道具槽", "used": False}
 
         item_idx = prop_list[slot]
+        if item_idx < 0 or item_idx >= len(self._props):
+            return {"extra_points": 0, "message": "Invalid inventory item.", "used": False}
         prop = self._props[item_idx]
 
         if item_idx == 0:   # 骰子道具

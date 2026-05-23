@@ -46,19 +46,19 @@ class _FreeHouse(_Card):
     """
 
     def action(self, players, lands, p):
-        c = int(random.random()) * 3   # Bug 複製：永遠為 0
+        c = random.randrange(len(players))
         msg = f"恭喜第{c + 1}位玩家可以免費蓋一棟房子!"
 
-        if not players[p].get_house():
+        if not players[c].get_house():
             return {"messages": [msg, "（當前玩家無地產，無法蓋房）"], "updated_players": []}
 
-        # 找出當前玩家最便宜的地產並升級
+        # Find the selected player's cheapest land and upgrade it.
         cheapest_idx = min(
-            players[p].get_house(),
+            players[c].get_house(),
             key=lambda idx: lands[idx].get_money()
         )
         lands[cheapest_idx].upgrade_land()
-        return {"messages": [msg], "updated_players": [p]}
+        return {"messages": [msg], "updated_players": [c]}
 
 
 class _Wolf(_Card):

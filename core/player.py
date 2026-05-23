@@ -85,10 +85,7 @@ class Player:
                         self.locate += m
 
         elif m < 0:
-            # 例：move(-2) 實際讓 locate 增加 2（往前走）
-            self.locate = self.locate - m
-            if self.locate < 0:
-                self.locate = 48 + self.locate
+            self.locate = (self.locate + m) % 48
             self._check_river()
 
         return self.locate
