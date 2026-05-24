@@ -27,7 +27,7 @@ from ui.constants import (
     MUSIC_PATH, DICE_RECT, ITEM_RECT, DICE_FRAME_RECT, ITEM_FRAME_RECT,
     GRAY,
     PARCHMENT, PARCHMENT_DARK, SHADOW, TURN_GLOW,
-    FONT_SIZE_XL, FONT_SIZE_LG,
+    FONT_SIZE_XL, FONT_SIZE_LG, FONT_SIZE_MD,
 )
 from ui.utils import load_font, in_rect, draw_rect_alpha, draw_rounded_rect_alpha, draw_text_shadow
 from ui.board_renderer import BoardRenderer
